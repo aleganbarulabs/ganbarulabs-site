@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent per Onboarding — Ganbaru Labs</title>
+  <meta name="description" content="Stiamo esplorando un AI agent su Microsoft Copilot per l'onboarding. 20 minuti per capire se il problema è reale per te.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0D1117;
+      --ink-deep: #080C10;
+      --paper: #F5F2ED;
+      --paper-warm: #EDE9E2;
+      --vermillion: #C8392B;
+      --vermillion-soft: #D94F3D;
+      --mist: #8A9BA8;
+      --rule: rgba(13,17,23,0.1);
+      --rule-light: rgba(245,242,237,0.1);
+      --font-display: 'Shippori Mincho', serif;
+      --font-body: 'DM Sans', sans-serif;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(8,12,16,0.95);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 1px 0 rgba(245,242,237,0.07);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--paper);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .nav-logo:hover { opacity: 1; }
+    .nav-logo .mark {
+      width: 22px; height: 22px;
+      background: rgba(245,242,237,0.08);
+      border: 1px solid rgba(245,242,237,0.15);
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo .mark svg { width: 12px; height: 12px; }
+    .nav-badge {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(245,242,237,0.3);
+      border: 1px solid rgba(245,242,237,0.12);
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: var(--ink-deep);
+      color: var(--paper);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 56px 88px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(245,242,237,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,242,237,0.03) 1px, transparent 1px);
+      background-size: 72px 72px;
+      pointer-events: none;
+    }
+    .hero-grid::after {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 85%, rgba(200,57,43,0.13) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 30% at 90% 10%, rgba(200,57,43,0.05) 0%, transparent 50%);
+    }
+    .hero-ms-badge {
+      position: absolute;
+      top: 50%;
+      right: 5%;
+      transform: translateY(-50%);
+      font-family: var(--font-display);
+      font-size: clamp(120px, 18vw, 280px);
+      color: rgba(245,242,237,0.025);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      letter-spacing: -0.04em;
+    }
+    .hero-exploration-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--vermillion-soft);
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .hero-exploration-tag::before {
+      content: '';
+      display: block;
+      width: 20px; height: 1px;
+      background: var(--vermillion-soft);
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 5.5vw, 80px);
+      font-weight: 700;
+      line-height: 1.06;
+      letter-spacing: -0.025em;
+      max-width: 820px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--vermillion);
+    }
+    .hero-sub {
+      font-size: clamp(15px, 1.5vw, 17px);
+      font-weight: 300;
+      color: rgba(245,242,237,0.5);
+      max-width: 520px;
+      line-height: 1.75;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: var(--vermillion);
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 2px;
+      position: relative;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .hero-cta:hover { background: var(--vermillion-soft); transform: translateY(-1px); }
+    .hero-note {
+      font-size: 12px;
+      font-weight: 300;
+      color: rgba(245,242,237,0.25);
+      margin-top: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    /* cost strip */
+    .hero-bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      border-top: 1px solid rgba(245,242,237,0.07);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .hero-cost {
+      padding: 18px 56px;
+      border-right: 1px solid rgba(245,242,237,0.07);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-cost:last-child { border-right: none; }
+    .hero-cost-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--vermillion);
+      flex-shrink: 0;
+    }
+    .hero-cost-text {
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(245,242,237,0.28);
+      line-height: 1.4;
+    }
+
+    /* ── SECTIONS COMMON ── */
+    section { padding: 100px 56px; }
+    .section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--mist);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 20px; height: 1px;
+      background: var(--mist);
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 3.2vw, 46px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.08;
+      color: var(--ink);
+    }
+    .section-title em { font-style: normal; color: var(--vermillion); }
+    .divider { width: 100%; height: 1px; background: var(--rule); }
+
+    /* ── PROBLEM ── */
+    .problem { background: var(--paper); }
+    .problem-intro {
+      font-size: 15px;
+      font-weight: 300;
+      color: rgba(13,17,23,0.6);
+      line-height: 1.8;
+      max-width: 540px;
+      margin-top: 24px;
+    }
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      margin-top: 56px;
+    }
+    .problem-col {
+      background: var(--paper);
+      padding: 44px 40px;
+    }
+    .problem-col-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .problem-col-tag {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--vermillion);
+    }
+    .problem-col-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .problem-col-sub {
+      font-size: 12px;
+      color: var(--mist);
+      letter-spacing: 0.03em;
+    }
+    .problem-items { display: flex; flex-direction: column; gap: 14px; }
+    .problem-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(13,17,23,0.7);
+      line-height: 1.5;
+    }
+    .problem-item-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--vermillion);
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── SOLUTION ── */
+    .solution {
+      background: var(--ink-deep);
+      color: var(--paper);
+      position: relative;
+      overflow: hidden;
+    }
+    .solution .section-label { color: rgba(245,242,237,0.25); }
+    .solution .section-label::before { background: rgba(245,242,237,0.15); }
+    .solution .section-title { color: var(--paper); }
+    .solution-intro {
+      font-size: 15px;
+      font-weight: 300;
+      color: rgba(245,242,237,0.45);
+      max-width: 580px;
+      line-height: 1.8;
+      margin-top: 20px;
+      margin-bottom: 56px;
+    }
+    .solution-stack {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+    .solution-stack-item {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(245,242,237,0.45);
+      border: 1px solid rgba(245,242,237,0.12);
+      padding: 5px 11px;
+      border-radius: 2px;
+    }
+    .solution-stack-plus { font-size: 12px; color: rgba(245,242,237,0.18); }
+    .solution-stack-result {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: var(--vermillion);
+      padding: 5px 11px;
+      border-radius: 2px;
+    }
+
+    /* Copilot UI mockup */
+    .copilot-ui {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .copilot-window {
+      background: #1C1C1E;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: var(--font-body);
+    }
+    /* Titlebar */
+    .copilot-titlebar {
+      background: #2C2C2E;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .copilot-dots { display: flex; gap: 5px; }
+    .copilot-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .copilot-dot:nth-child(1) { background: #FF5F57; }
+    .copilot-dot:nth-child(2) { background: #FFBD2E; }
+    .copilot-dot:nth-child(3) { background: #28C840; }
+    .copilot-title-text {
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.06em;
+      margin-left: 4px;
+    }
+    .copilot-scenario-tag {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--vermillion-soft);
+      background: rgba(200,57,43,0.12);
+      border: 1px solid rgba(200,57,43,0.2);
+      padding: 2px 7px;
+      border-radius: 1px;
+    }
+    /* Sidebar */
+    .copilot-body { display: flex; height: 280px; }
+    .copilot-sidebar {
+      width: 44px;
+      background: #252527;
+      border-right: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .copilot-sidebar-icon {
+      width: 24px; height: 24px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0.3;
+    }
+    .copilot-sidebar-icon.active {
+      background: rgba(0,120,212,0.25);
+      opacity: 1;
+    }
+    .copilot-sidebar-icon svg { width: 13px; height: 13px; }
+    /* Chat area */
+    .copilot-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .copilot-chat-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .copilot-logo {
+      width: 16px; height: 16px;
+      border-radius: 3px;
+      background: linear-gradient(135deg, #0078D4, #00BCF2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .copilot-logo svg { width: 9px; height: 9px; }
+    .copilot-chat-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.02em;
+    }
+    .copilot-online {
+      margin-left: auto;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #28C840;
+    }
+    .copilot-messages {
+      flex: 1;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .c-msg { display: flex; gap: 8px; align-items: flex-start; }
+    .c-msg.user { flex-direction: row-reverse; }
+    .c-avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px;
+      font-weight: 600;
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
+    }
+    .c-avatar.ai {
+      background: linear-gradient(135deg, #0078D4, #00BCF2);
+      color: white;
+    }
+    .c-avatar.user-av {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.5);
+    }
+    .c-bubble {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 2px 8px 8px 8px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.5;
+      max-width: 82%;
+    }
+    .c-msg.user .c-bubble {
+      border-radius: 8px 2px 8px 8px;
+      background: rgba(0,120,212,0.15);
+      border-color: rgba(0,120,212,0.2);
+    }
+    .c-actions {
+      display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap;
+    }
+    .c-tag {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 2px;
+      color: rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .c-tag.ok { color: #28C840; border-color: rgba(40,200,64,0.25); background: rgba(40,200,64,0.06); }
+    .c-tag.warn { color: #FFBD2E; border-color: rgba(255,189,46,0.25); background: rgba(255,189,46,0.06); }
+    .c-tag.alert { color: #FF5F57; border-color: rgba(255,95,87,0.25); background: rgba(255,95,87,0.06); }
+    /* Input bar */
+    .copilot-input {
+      padding: 8px 10px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .copilot-input-bar {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 3px;
+      padding: 5px 10px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.2);
+      font-family: var(--font-body);
+    }
+    .copilot-send {
+      width: 22px; height: 22px;
+      background: #0078D4;
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .copilot-send svg { width: 10px; height: 10px; }
+
+    /* ── METRICS ── */
+    .metrics { background: var(--paper-warm); }
+    .metrics-note {
+      font-size: 12px;
+      font-weight: 300;
+      color: rgba(13,17,23,0.35);
+      margin-top: 12px;
+      font-style: italic;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      margin-top: 56px;
+    }
+    .metric-card {
+      background: var(--paper-warm);
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--vermillion);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s var(--ease-out);
+    }
+    .metric-card:hover::after { transform: scaleX(1); }
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 6px;
+      line-height: 1;
+    }
+    .metric-value em { font-style: normal; color: var(--vermillion); }
+    .metric-label {
+      font-size: 13px;
+      font-weight: 300;
+      color: rgba(13,17,23,0.6);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .metric-source {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mist);
+    }
+
+    /* ── TARGET ── */
+    .target { background: var(--paper); }
+    .target-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+      margin-top: 48px;
+    }
+    .target-checks { display: flex; flex-direction: column; gap: 20px; }
+    .target-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .target-check:first-child { border-top: 1px solid var(--rule); }
+    .target-check-icon {
+      width: 20px; height: 20px;
+      border: 1.5px solid var(--vermillion);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .target-check-icon svg { width: 10px; height: 10px; }
+    .target-check-label {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .target-check-desc {
+      font-size: 13px;
+      font-weight: 300;
+      color: rgba(13,17,23,0.55);
+      line-height: 1.6;
+    }
+    .target-right { display: flex; flex-direction: column; gap: 0; }
+    .target-right-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+    .target-right-desc {
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(13,17,23,0.6);
+      line-height: 1.75;
+      margin-bottom: 32px;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: var(--ink-deep);
+      color: var(--paper);
+      padding: 100px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 100%, rgba(200,57,43,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .cta-section .section-label { justify-content: center; color: rgba(245,242,237,0.25); }
+    .cta-section .section-label::before { display: none; }
+    .cta-title {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 3.5vw, 52px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.08;
+      max-width: 600px;
+      margin: 16px auto 16px;
+      color: var(--paper);
+    }
+    .cta-title em { font-style: normal; color: var(--vermillion); }
+    .cta-sub {
+      font-size: 15px;
+      font-weight: 300;
+      color: rgba(245,242,237,0.4);
+      max-width: 420px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+    .cta-form-box {
+      max-width: 480px;
+      margin: 0 auto;
+      background: rgba(245,242,237,0.04);
+      border: 1px solid rgba(245,242,237,0.1);
+      border-radius: 4px;
+      padding: 40px;
+    }
+    .form-field {
+      margin-bottom: 12px;
+    }
+    .form-field input {
+      width: 100%;
+      padding: 13px 18px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--paper);
+      background: rgba(245,242,237,0.05);
+      border: 1px solid rgba(245,242,237,0.12);
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-field input::placeholder { color: rgba(245,242,237,0.25); }
+    .form-field input:focus { border-color: rgba(245,242,237,0.3); }
+    .form-submit {
+      display: block;
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: var(--vermillion);
+      border: none;
+      padding: 15px 24px;
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      margin-top: 4px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .form-submit:hover { background: var(--vermillion-soft); transform: translateY(-1px); }
+    button.form-submit { border: none; cursor: pointer; width: 100%; font-family: var(--font-body); }
+    .cta-disclaimer {
+      font-size: 12px;
+      color: rgba(245,242,237,0.2);
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink-deep);
+      border-top: 1px solid rgba(245,242,237,0.07);
+      padding: 28px 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(245,242,237,0.3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-logo:hover { color: var(--paper); }
+    .footer-sep { color: rgba(245,242,237,0.1); font-size: 12px; }
+    .footer-legal { font-size: 11px; color: rgba(245,242,237,0.15); letter-spacing: 0.03em; }
+    .footer-right a {
+      font-size: 12px;
+      color: rgba(245,242,237,0.25);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-right a:hover { color: var(--paper); }
+
+    /* ── REVEAL ── */
+    [data-reveal] {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    }
+    [data-reveal].visible { opacity: 1; transform: none; }
+    [data-reveal-delay="1"] { transition-delay: 0.1s; }
+    [data-reveal-delay="2"] { transition-delay: 0.2s; }
+    [data-reveal-delay="3"] { transition-delay: 0.3s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      nav { padding: 16px 24px; }
+      section, .cta-section { padding: 72px 24px; }
+      .hero { padding: 0 24px 160px; }
+      .hero-bottom { display: none; }
+      .hero-ms-badge { display: none; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .solution-layout { grid-template-columns: 1fr; gap: 48px; }
+      .copilot-ui { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .target-layout { grid-template-columns: 1fr; gap: 48px; }
+      footer { flex-direction: column; gap: 12px; align-items: flex-start; padding: 24px; }
+    }
+    @media (max-width: 600px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+      .cta-form-box { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="https://ganbarulabs.com" class="nav-logo">
+      <span class="mark">
+        <svg viewBox="0 0 12 12" fill="none">
+          <rect x="1" y="1" width="3.5" height="3.5" fill="#F5F2ED"/>
+          <rect x="7.5" y="1" width="3.5" height="3.5" fill="#F5F2ED" opacity="0.5"/>
+          <rect x="1" y="7.5" width="3.5" height="3.5" fill="#F5F2ED" opacity="0.3"/>
+          <rect x="7.5" y="7.5" width="3.5" height="3.5" fill="#C8392B"/>
+        </svg>
+      </span>
+      Ganbaru Lab
+    </a>
+    <span class="nav-badge">Ricerca esplorativa</span>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-grid"></div>
+    <div class="hero-ms-badge">Copilot</div>
+
+    <p class="hero-exploration-tag">Microsoft Copilot · AI Agent per HR</p>
+    <h1>Ogni nuovo ingresso<br>costa alla tua azienda<br><em>tra €8.000 e €15.000.</em></h1>
+    <p class="hero-sub">E non appare in nessun budget. Stiamo esplorando un AI agent su Microsoft Copilot per l'onboarding — e vogliamo prima capire se il problema è reale per te.</p>
+    <a href="#contatto" class="hero-cta">Parliamone — 20 min →</a>
+    <p class="hero-note">Nessuna vendita. Nessun pitch. Solo una conversazione su come funziona oggi da voi.</p>
+
+    <div class="hero-bottom">
+      <div class="hero-cost">
+        <span class="hero-cost-dot"></span>
+        <span class="hero-cost-text">Produttività persa<br>nelle prime 12–16 settimane</span>
+      </div>
+      <div class="hero-cost">
+        <span class="hero-cost-dot"></span>
+        <span class="hero-cost-text">Tempo manager<br>sottratto al lavoro reale</span>
+      </div>
+      <div class="hero-cost">
+        <span class="hero-cost-dot"></span>
+        <span class="hero-cost-text">Ore HR per<br>coordinamento manuale</span>
+      </div>
+      <div class="hero-cost">
+        <span class="hero-cost-dot"></span>
+        <span class="hero-cost-text">Ogni onboarding<br>riparte da zero</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="problem" id="problema">
+    <p class="section-label" data-reveal>Il problema</p>
+    <h2 class="section-title" data-reveal data-reveal-delay="1">Le prime 12–16 settimane<br><em>sono le più costose dell'anno.</em></h2>
+    <p class="problem-intro" data-reveal data-reveal-delay="2">Un nuovo dipendente impiega settimane per diventare davvero operativo. Non per mancanza di volontà — ma perché nessuno ha strutturato il processo. Ogni volta si ricomincia da zero.</p>
+
+    <div class="problem-grid" style="grid-template-columns: 1fr 1fr 1fr;" data-reveal data-reveal-delay="2">
+      <div class="problem-col">
+        <div class="problem-col-header">
+          <div>
+            <p class="problem-col-tag">Giorno 1</p>
+            <p class="problem-col-title">Il caos dell'arrivo</p>
+          </div>
+        </div>
+        <div class="problem-items">
+          <div class="problem-item"><span class="problem-item-dot"></span>Portatile non configurato, credenziali non pronte</div>
+          <div class="problem-item"><span class="problem-item-dot"></span>Nessuno sa esattamente cosa fare — HR, IT e manager si rimpallano</div>
+          <div class="problem-item"><span class="problem-item-dot"></span>Prima impressione compromessa: il nuovo arriva motivato, trova il caos</div>
+        </div>
+      </div>
+      <div class="problem-col">
+        <div class="problem-col-header">
+          <div>
+            <p class="problem-col-tag">Settimane 1–8</p>
+            <p class="problem-col-title">La rincorsa alle informazioni</p>
+          </div>
+        </div>
+        <div class="problem-items">
+          <div class="problem-item"><span class="problem-item-dot"></span>Documentazione sparsa su SharePoint, Teams, email e drive personali</div>
+          <div class="problem-item"><span class="problem-item-dot"></span>Il manager passa ore ad affiancare invece di lavorare</div>
+          <div class="problem-item"><span class="problem-item-dot"></span>Processi e tool da scoprire per tentativi — nessuna guida strutturata</div>
+        </div>
+      </div>
+      <div class="problem-col">
+        <div class="problem-col-header">
+          <div>
+            <p class="problem-col-tag">Strutturalmente</p>
+            <p class="problem-col-title">Il problema che si ripete</p>
+          </div>
+        </div>
+        <div class="problem-items">
+          <div class="problem-item"><span class="problem-item-dot"></span>Ogni onboarding riparte da zero — nessun processo replicabile</div>
+          <div class="problem-item"><span class="problem-item-dot"></span>HR coordina tutto a mano: email, reminder, checklist su fogli</div>
+          <div class="problem-item"><span class="problem-item-dot"></span>Nessuna visibilità su chi è davvero operativo e chi è ancora bloccato</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SOLUTION -->
+  <section class="solution" id="soluzione">
+    <p class="section-label" data-reveal>La soluzione che stiamo esplorando</p>
+    <h2 class="section-title" data-reveal data-reveal-delay="1">Un AI agent su Copilot<br><em>che guida ogni nuovo ingresso al posto tuo.</em></h2>
+    <p class="solution-intro" data-reveal data-reveal-delay="2">Se la tua azienda usa già Microsoft 365, l'infrastruttura c'è già. L'agent si installa sopra Teams, SharePoint e Copilot — conosce i tuoi processi, le tue persone, e accompagna ogni nuovo dipendente dal primo giorno senza che nessuno debba ricordarsi di farlo.</p>
+
+    <div class="solution-stack" data-reveal data-reveal-delay="2">
+      <span class="solution-stack-item">Microsoft Copilot</span>
+      <span class="solution-stack-plus">+</span>
+      <span class="solution-stack-item">Teams & SharePoint</span>
+      <span class="solution-stack-plus">+</span>
+      <span class="solution-stack-item">Processi HR</span>
+      <span class="solution-stack-plus">=</span>
+      <span class="solution-stack-result">Agent onboarding</span>
+    </div>
+
+    <div class="copilot-ui" data-reveal data-reveal-delay="3">
+
+      <!-- SCENARIO 1: Onboarding giorno 1 -->
+      <div class="copilot-window">
+        <div class="copilot-titlebar">
+          <div class="copilot-dots">
+            <div class="copilot-dot"></div>
+            <div class="copilot-dot"></div>
+            <div class="copilot-dot"></div>
+          </div>
+          <span class="copilot-title-text">Microsoft Copilot</span>
+          <span class="copilot-scenario-tag">Onboarding · Giorno 1</span>
+        </div>
+        <div class="copilot-body">
+          <div class="copilot-sidebar">
+            <div class="copilot-sidebar-icon active">
+              <svg viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.5" stroke="white" stroke-width="1.2"/><path d="M2 11c0-2.5 2-4.5 4.5-4.5S11 8.5 11 11" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="copilot-sidebar-icon">
+              <svg viewBox="0 0 13 13" fill="none"><rect x="1.5" y="1.5" width="10" height="10" rx="1.5" stroke="white" stroke-width="1.2"/><path d="M4 6.5h5M4 4.5h3" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="copilot-sidebar-icon">
+              <svg viewBox="0 0 13 13" fill="none"><path d="M1.5 10L5 4l3 4 2-2.5 2.5 4.5" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="copilot-chat">
+            <div class="copilot-chat-header">
+              <div class="copilot-logo">
+                <svg viewBox="0 0 9 9" fill="none"><circle cx="4.5" cy="4.5" r="3.5" fill="white" opacity="0.9"/></svg>
+              </div>
+              <span class="copilot-chat-title">Copilot HR Agent</span>
+              <div class="copilot-online"></div>
+            </div>
+            <div class="copilot-messages">
+              <div class="c-msg">
+                <div class="c-avatar ai">AI</div>
+                <div>
+                  <div class="c-bubble">Buongiorno Marco 👋 Primo giorno! Ho già configurato il tuo profilo e inviato le credenziali. L'account Azure AD è attivo — Teams e Outlook funzionano.</div>
+                  <div class="c-actions">
+                    <span class="c-tag ok">✓ Account creato</span>
+                    <span class="c-tag ok">✓ Calendario sincronizzato</span>
+                  </div>
+                </div>
+              </div>
+              <div class="c-msg user">
+                <div class="c-avatar user-av">MR</div>
+                <div class="c-bubble">Non riesco ad accedere a Salesforce, mi dà errore 403</div>
+              </div>
+              <div class="c-msg">
+                <div class="c-avatar ai">AI</div>
+                <div>
+                  <div class="c-bubble">Capito — la licenza Salesforce non era nel profilo. Ho aperto ticket IT #4821, priorità alta, stima risoluzione 90 min. Ho avvisato il tuo manager e caricato qui i deal attivi di cui hai bisogno oggi.</div>
+                  <div class="c-actions">
+                    <span class="c-tag warn">⏱ Ticket IT aperto</span>
+                    <span class="c-tag ok">✓ Manager avvisato</span>
+                    <span class="c-tag ok">✓ File condivisi</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="copilot-input">
+              <div class="copilot-input-bar">Scrivi a Copilot...</div>
+              <div class="copilot-send">
+                <svg viewBox="0 0 10 10" fill="none"><path d="M1.5 5h7M5.5 2l3 3-3 3" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENARIO 2: Onboarding settimana 2 - allineamento manager -->
+      <div class="copilot-window">
+        <div class="copilot-titlebar">
+          <div class="copilot-dots">
+            <div class="copilot-dot"></div>
+            <div class="copilot-dot"></div>
+            <div class="copilot-dot"></div>
+          </div>
+          <span class="copilot-title-text">Microsoft Copilot</span>
+          <span class="copilot-scenario-tag">Onboarding · Settimana 2</span>
+        </div>
+        <div class="copilot-body">
+          <div class="copilot-sidebar">
+            <div class="copilot-sidebar-icon active">
+              <svg viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.5" stroke="white" stroke-width="1.2"/><path d="M2 11c0-2.5 2-4.5 4.5-4.5S11 8.5 11 11" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="copilot-sidebar-icon">
+              <svg viewBox="0 0 13 13" fill="none"><rect x="1.5" y="1.5" width="10" height="10" rx="1.5" stroke="white" stroke-width="1.2"/><path d="M4 6.5h5M4 4.5h3" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="copilot-sidebar-icon">
+              <svg viewBox="0 0 13 13" fill="none"><path d="M1.5 10L5 4l3 4 2-2.5 2.5 4.5" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="copilot-chat">
+            <div class="copilot-chat-header">
+              <div class="copilot-logo">
+                <svg viewBox="0 0 9 9" fill="none"><circle cx="4.5" cy="4.5" r="3.5" fill="white" opacity="0.9"/></svg>
+              </div>
+              <span class="copilot-chat-title">Copilot HR Agent</span>
+              <div class="copilot-online"></div>
+            </div>
+            <div class="copilot-messages">
+              <div class="c-msg">
+                <div class="c-avatar ai">AI</div>
+                <div>
+                  <div class="c-bubble">Giulia, sono al giorno 8. Ho rilevato che non ha ancora completato il modulo GDPR e non ha avuto il 1:1 con il suo manager. Vuoi che lo scheduli io?</div>
+                  <div class="c-actions">
+                    <span class="c-tag warn">⏱ GDPR incompleto</span>
+                    <span class="c-tag warn">⏱ 1:1 mancante</span>
+                  </div>
+                </div>
+              </div>
+              <div class="c-msg user">
+                <div class="c-avatar user-av">GR</div>
+                <div class="c-bubble">Sì, trova uno slot questa settimana con Luca</div>
+              </div>
+              <div class="c-msg">
+                <div class="c-avatar ai">AI</div>
+                <div>
+                  <div class="c-bubble">Fatto — giovedì 15:00, invito inviato a entrambi. Ho anche mandato a Marco un reminder sul modulo GDPR con il link diretto. Ti aggiorno a fine settimana sullo stato complessivo.</div>
+                  <div class="c-actions">
+                    <span class="c-tag ok">✓ 1:1 schedulato</span>
+                    <span class="c-tag ok">✓ Reminder inviato</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="copilot-input">
+              <div class="copilot-input-bar">Scrivi a Copilot...</div>
+              <div class="copilot-send">
+                <svg viewBox="0 0 10 10" fill="none"><path d="M1.5 5h7M5.5 2l3 3-3 3" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section class="metrics" id="impatto">
+    <p class="section-label" data-reveal>L'impatto atteso</p>
+    <h2 class="section-title" data-reveal data-reveal-delay="1">Cosa cambierebbe<br><em>in numeri.</em></h2>
+    <p class="metrics-note" data-reveal data-reveal-delay="2">Stime basate su ricerche di settore. I numeri reali dipendono dalla tua realtà — è esattamente quello che vogliamo capire insieme.</p>
+    <div class="metrics-grid" data-reveal data-reveal-delay="2">
+      <div class="metric-card">
+        <p class="metric-value"><em>↓ 30–50%</em></p>
+        <p class="metric-label">riduzione del tempo per diventare pienamente operativi (12–16 settimane → 6–8)</p>
+        <p class="metric-source">Brandon Hall Group</p>
+      </div>
+      <div class="metric-card">
+        <p class="metric-value"><em>↓ 25–40%</em></p>
+        <p class="metric-label">del tempo manager dedicato ad affiancamento manuale</p>
+        <p class="metric-source">Stima settoriale</p>
+      </div>
+      <div class="metric-card">
+        <p class="metric-value"><em>↑ 82%</em></p>
+        <p class="metric-label">miglioramento della retention con onboarding strutturato</p>
+        <p class="metric-source">Brandon Hall Group</p>
+      </div>
+      <div class="metric-card">
+        <p class="metric-value"><em>↓ 40–60%</em></p>
+        <p class="metric-label">dei breach coinvolgono ex dipendenti con accessi non revocati</p>
+        <p class="metric-source">Ponemon Institute</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- TARGET -->
+  <section class="target" id="target">
+    <p class="section-label" data-reveal>Con chi vogliamo parlare</p>
+    <h2 class="section-title" data-reveal data-reveal-delay="1">Ti riconosci <em>qui?</em></h2>
+    <div class="target-layout">
+      <div class="target-checks" data-reveal data-reveal-delay="2">
+        <div class="target-check">
+          <div class="target-check-icon">
+            <svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#C8392B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <p class="target-check-label">Usi già Microsoft 365</p>
+            <p class="target-check-desc">Teams, SharePoint e Copilot attivi in azienda — l'agent si installa sopra, senza nuovi tool da adottare.</p>
+          </div>
+        </div>
+        <div class="target-check">
+          <div class="target-check-icon">
+            <svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#C8392B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <p class="target-check-label">200–5.000 dipendenti</p>
+            <p class="target-check-desc">Abbastanza grande da sentire il costo di ogni onboarding, abbastanza agile per strutturare il processo.</p>
+          </div>
+        </div>
+        <div class="target-check">
+          <div class="target-check-icon">
+            <svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#C8392B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <p class="target-check-label">HR, People o IT manager</p>
+            <p class="target-check-desc">Chiunque senta il peso di coordinare manualmente queste transizioni ogni mese.</p>
+          </div>
+        </div>
+        <div class="target-check">
+          <div class="target-check-icon">
+            <svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#C8392B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <p class="target-check-label">Il problema è reale</p>
+            <p class="target-check-desc">Non serve avere una soluzione in testa. Basta che l'onboarding ti costi tempo e fatica ogni volta.</p>
+          </div>
+        </div>
+      </div>
+      <div class="target-right" data-reveal data-reveal-delay="3">
+        <p class="target-right-title">Come gestite oggi l'onboarding?</p>
+        <p class="target-right-desc">Stiamo parlando con HR manager e responsabili people di aziende che usano Microsoft 365. Vogliamo capire quanto pesa il problema dell'onboarding — prima di costruire qualsiasi cosa. 20 minuti, zero impegno.</p>
+        <a href="#contatto" class="hero-cta" style="align-self: flex-start;">Dimmi se riconosci il problema →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="contatto">
+    <p class="section-label" data-reveal>Prossimo passo</p>
+    <h2 class="cta-title" data-reveal data-reveal-delay="1">20 minuti per capire<br>se il problema <em>è reale per te.</em></h2>
+    <p class="cta-sub" data-reveal data-reveal-delay="2">Nessuna vendita. Nessun pitch. Solo una conversazione su come funziona oggi da voi.</p>
+    <div class="cta-form-box" data-reveal data-reveal-delay="3">
+      <form id="contact-form" action="https://docs.google.com/forms/d/e/1FAIpQLSdnL2DNxLBxzbCuPtX5rvEdPAJw3LOze4RYW3Z4SrD2r10VMg/formResponse" method="POST" target="_blank">
+        <input type="hidden" name="_next" value="https://calendly.com/ale-ganbarulabs">
+        <div class="form-field">
+          <input type="text" name="entry.1" placeholder="Nome e ruolo" required>
+        </div>
+        <div class="form-field">
+          <input type="email" name="entry.2" placeholder="Email aziendale" required>
+        </div>
+        <button type="submit" class="form-submit">Prenota la call →</button>
+      </form>
+      <p class="cta-disclaimer">Ricerca esplorativa · Non stiamo vendendo un prodotto · hello@ganbarulabs.com</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      <a href="https://ganbarulabs.com" class="footer-logo">Ganbaru Labs</a>
+      <span class="footer-sep">·</span>
+      <span class="footer-legal">Ricerca esplorativa · Milano 2026</span>
+    </div>
+    <div class="footer-right">
+      <a href="mailto:hello@ganbarulabs.com">hello@ganbarulabs.com</a>
+    </div>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    const reveals = document.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
